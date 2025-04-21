@@ -36,7 +36,6 @@ class PRF:
       with open(cls._cache_file, 'w') as f:
         # Need to convert values to lists since tuples aren't JSON serializable
         serializable_cache = {str(k): list(v) for k, v in cls._parameter_cache.items()}
-        print(serializable_cache)
         json.dump(serializable_cache, f)
 
   @staticmethod
@@ -509,7 +508,7 @@ class Adversary:
     first_message = '0' * (self.n - 2) + '1' + '1' * (self.n - 1)
     tag_1 = self.oracle(first_message)
 
-    second_message = '1' * (self.n - 1) + '0' * (self.n - 1)
+    second_message = '0' * (self.n - 1) + '0' * (self.n - 1)
     tag_2 = self.oracle(second_message)
 
     output_message = '0' * (self.n - 2) + '1' + '0' * (self.n - 1)
@@ -566,7 +565,7 @@ class MAC_FORGE:
 
     self._adversary = Adversary(security_parameter, oracle=self.oracle, callback=callback)
 
-  def oracle(self, m: str):
+  def oracle(self, m: str, isAdversary: bool = True):
     """
     Generates a tag for the message and records the query by the adversary.
 
@@ -584,7 +583,8 @@ class MAC_FORGE:
     # generate tag
     tag = self._mac.generate_tag(m)
     # record the query by the adversary
-    self._Q.append((m, tag))
+    if isAdversary:
+      self._Q.append((m, tag))
     return tag
 
   def run_experiment(self):
@@ -737,7 +737,7 @@ if __name__ == "__main__":
       
       while message.lower() != 'back':
         try:
-          tag = mac.oracle(message)
+          tag = mac.oracle(message, False)
           print(f"Message: {message}")
           print(f"MAC tag: {tag}")
         except Exception as e:
